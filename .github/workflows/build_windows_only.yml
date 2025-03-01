@@ -221,26 +221,22 @@ jobs:
 
   codesign-windows:
     needs: [build-windows]
-    runs-on: [self-hosted, macos, token]
+    runs-on: ubuntu-latest
     steps:
+      - name: Skip Code Signing
+        run: echo "Skipping code signing process"
+        
       - name: Download Windows Artifact
         uses: actions/download-artifact@v4
         with:
           name: logseq-win64-unsigned-builds
           path: ./builds
-
-      - name: Sign Windows Executable
-        run: |
-          ls -lah ./builds
-          jsign --storetype ETOKEN --storepass "${PASS}" -t http://timestamp.sectigo.com ./builds/*.exe
-        env:
-          PASS: ${{ secrets.CODE_SIGN_CERTIFICATE_PASSWORD }}
-
-      - name: Upload Artifact
+          
+      - name: Upload Artifact As-Is
         uses: actions/upload-artifact@v4
         with:
           name: logseq-win64-signed-builds
-          path: builds
+          path: ./builds
 
   release-windows:
     needs: [codesign-windows]
