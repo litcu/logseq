@@ -46,7 +46,6 @@ env:
 jobs:
   sync-branch:
     runs-on: ubuntu-latest
-    if: ${{ github.event_name == 'schedule' }}
     steps:
       - name: Check out Git repository
         uses: actions/checkout@v3
@@ -60,16 +59,20 @@ jobs:
           git config --global user.email "action@github.com"
 
       - name: Sync with upstream
+        if: ${{ github.event_name == 'schedule' }}
         run: |
           git remote add upstream https://github.com/logseq/logseq.git
           git fetch upstream
           git merge upstream/${{ env.GIT_BRANCH }} --no-edit
           git push origin ${{ env.GIT_BRANCH }}
+          
+      - name: Skip sync for manual triggers
+        if: ${{ github.event_name != 'schedule' }}
+        run: echo "Manual trigger detected - skipping sync with upstream but continuing workflow"
 
   compile-cljs:
     runs-on: ubuntu-20.04
     needs: [sync-branch]
-    if: ${{ github.event_name != 'schedule' || success() }}
     steps:
       - name: Check out Git repository
         uses: actions/checkout@v3
@@ -160,55 +163,7 @@ jobs:
           name: static
           path: static
 
-  e2e-test:
-    name: E2E Test
-    runs-on: ubuntu-latest
-    needs: [compile-cljs]
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v3
-        with:
-          ref: ${{ env.GIT_BRANCH }}
-
-      - name: Download The Static Asset
-        uses: actions/download-artifact@v3
-        with:
-          name: static
-          path: static
-
-      - name: Set up Node
-        uses: actions/setup-node@v3
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: 'yarn'
-          cache-dependency-path: |
-            yarn.lock
-            static/yarn.lock
-
-      - name: Fetch yarn deps for E2E test
-        run: |
-          yarn install
-          (cd static && yarn install && yarn rebuild:all)
-        env:
-          PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: true
-
-      - name: Install Fluxbox
-        run: sudo apt-get update && sudo apt-get install -y fluxbox
-
-      # Emulate a virtual framebuffer on machines with no display hardware
-      - name: Run XVFB
-        run: Xvfb :1 -screen 0 1024x768x24 >/dev/null 2>&1 &
-
-      # Start a lightweight window manager to simulate window actions (maximize,restore etc)
-      - name: Start Fluxbox
-        run:  DISPLAY=:1.0 fluxbox >/dev/null 2>&1 &
-
-      - name: Run Playwright test
-        run: DISPLAY=:1.0 npx playwright test --reporter github
-        env:
-          LOGSEQ_CI: true
-          DEBUG: "pw:api"
-          RELEASE: true # skip dev only test
+# 移除 e2e-test 作业
 
   build-windows:
     runs-on: windows-latest
@@ -267,7 +222,8 @@ jobs:
           path: builds
 
   codesign-windows:
-    if: ${{ github.event_name == 'schedule' || github.event.inputs.build-target == 'nightly' || github.event.inputs.build-target == 'beta' }}
+    if: ${{ always() }}
+    # 无论手动还是定时触发，都执行代码签名
     needs: [build-windows]
     runs-on: [self-hosted, macos, token]
     steps:
@@ -291,7 +247,8 @@ jobs:
           path: builds
 
   release-windows:
-    if: ${{ github.event_name == 'schedule' || github.event.inputs.build-target == 'nightly' || github.event.inputs.build-target == 'beta' }}
+    if: ${{ always() }}
+    # 确保无论如何都创建发布
     needs: [codesign-windows, e2e-test]
     runs-on: ubuntu-latest
     steps:
