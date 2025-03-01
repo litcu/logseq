@@ -168,7 +168,7 @@ jobs:
     needs: [compile-cljs]
     steps:
       - name: Download The Static Asset
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: static
           path: static
@@ -224,7 +224,7 @@ jobs:
     runs-on: [self-hosted, macos, token]
     steps:
       - name: Download Windows Artifact
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: logseq-win64-unsigned-builds
           path: ./builds
@@ -247,13 +247,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Download The Windows Artifact (Signed)
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: logseq-win64-signed-builds
           path: ./
 
       - name: Download The Windows Artifact
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: logseq-win64-builds
           path: ./
