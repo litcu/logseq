@@ -34,8 +34,8 @@ on:
         type: boolean
         required: true
         default: true
-  schedule: # Every 3 days at 2 P.M. (UTC) we run a scheduled build
-    - cron: '0 14 */3 * *'
+  schedule: # UTC
+    - cron: '0 0 * * *'
 
 env:
   CLOJURE_VERSION: '1.11.1.1413'
