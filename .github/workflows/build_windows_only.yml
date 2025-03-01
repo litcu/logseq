@@ -163,8 +163,6 @@ jobs:
           name: static
           path: static
 
-# 移除 e2e-test 作业
-
   build-windows:
     runs-on: windows-latest
     needs: [compile-cljs]
@@ -222,8 +220,6 @@ jobs:
           path: builds
 
   codesign-windows:
-    if: ${{ always() }}
-    # 无论手动还是定时触发，都执行代码签名
     needs: [build-windows]
     runs-on: [self-hosted, macos, token]
     steps:
@@ -247,9 +243,7 @@ jobs:
           path: builds
 
   release-windows:
-    if: ${{ always() }}
-    # 确保无论如何都创建发布
-    needs: [codesign-windows, e2e-test]
+    needs: [codesign-windows]
     runs-on: ubuntu-latest
     steps:
       - name: Download The Windows Artifact (Signed)
