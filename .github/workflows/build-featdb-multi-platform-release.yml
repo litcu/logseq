@@ -45,7 +45,7 @@ env:
 
 jobs:
   sync-branch:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     steps:
       - name: Check out Git repository
         uses: actions/checkout@v3
@@ -71,7 +71,7 @@ jobs:
         run: echo "Manual trigger detected - skipping sync with upstream but continuing workflow"
 
   compile-cljs:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     needs: [sync-branch]
     steps:
       - name: Check out Git repository
@@ -165,7 +165,7 @@ jobs:
 
   # 添加 Linux x64 构建作业
   build-linux-x64:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     needs: [compile-cljs]
     steps:
       - name: Download The Static Asset
@@ -404,7 +404,7 @@ jobs:
 
   codesign-windows:
     needs: [build-windows]
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     steps:
       - name: Skip Code Signing
         run: echo "Skipping code signing process"
@@ -423,7 +423,7 @@ jobs:
 
   release-multi-platform:
     needs: [codesign-windows, build-linux-x64, build-macos-x64, build-macos-arm64]
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     steps:
       - name: Download The Windows Artifact (Signed)
         uses: actions/download-artifact@v4
